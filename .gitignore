@@ -217,4 +217,26 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-.python_packageslocal.settings.json
+# A missing newline had fused these two entries into one nonsense pattern
+# (".python_packageslocal.settings.json"), so NEITHER was ignored — and
+# local.settings.json holds live Azure connection strings and keys.
+.python_packages/
+local.settings.json
+
+# ── Added 2026-08-04 ──────────────────────────────────────
+# Azure Functions extension-bundle build output. These were committed by
+# accident and made this repo ~1.7 MB (vs 32 KB for the chatbot repo).
+obj/
+bin/
+
+# pip bootstrap script — never belongs in a repo
+get-pip.py
+
+# macOS
+.DS_Store
+
+# Terraform — state and sensitive variable files (NEVER commit)
+terraform/.terraform/
+terraform/terraform.tfvars
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup

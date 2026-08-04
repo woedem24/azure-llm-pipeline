@@ -15,7 +15,8 @@ The AI analysis returns:
 - Up to 5 key takeaways
 - Sentiment (positive / neutral / negative)
 - Named entities (people, orgs, locations)
-- Word count and token usage
+- Token usage, plus a word count computed in Python — language models
+  can't count reliably, and `len(content.split())` is exact and free
 
 Results are retrievable anytime via a built-in HTTP endpoint.
 
@@ -50,7 +51,7 @@ Azure Function (Python 3.12)
 | AI | Azure OpenAI — GPT-4o |
 | Storage | Azure Blob Storage |
 | Database | Azure Cosmos DB (serverless) |
-| Secrets | Azure Key Vault (RBAC) |
+| Secrets | Azure Key Vault (access policies) |
 | Monitoring | Application Insights |
 | IaC | Terraform |
 
@@ -85,6 +86,10 @@ This section exists because anyone can copy a tutorial. Here's where things brok
 
 - **Python worker isolation** — Without `PYTHON_ISOLATE_WORKER_DEPENDENCIES=1`, the Azure Functions worker couldn't see the venv packages. One setting, not obvious at all.
 
+- **Retries can cost money** — the blob trigger retries 3× on an unhandled exception, which is right for a transient Cosmos timeout and wrong for a document that's simply too long. Every retry was another GPT-4o call reaching the same failure, so one bad upload got billed four times. Now failures are sorted into retryable and not, and oversized documents are rejected before any call is made.
+
+- **Asking the model to count** — the prompt originally requested `word_count` from GPT-4o. It was confidently wrong often enough to notice. Anything deterministic belongs in code, not in a prompt.
+
 ---
 
 ## What I'd Do Differently
@@ -97,7 +102,26 @@ This section exists because anyone can copy a tutorial. Here's where things brok
 
 ## Infrastructure
 
-All resources are in `terraform/main.tf`. Run `terraform apply` to provision from scratch.
+All resources are in `terraform/main.tf`.
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars   # then fill it in
+terraform init && terraform plan && terraform apply
+```
+
+Two things this config does **not** do, stated up front:
+
+- **It does not provision the Azure OpenAI resource.** Create that separately
+  and pass its endpoint and key in via `terraform.tfvars`; Terraform stores
+  both in Key Vault for the function to read at runtime.
+- **`prefix` must be globally unique.** Storage account, Key Vault and Cosmos DB
+  names share a namespace across all of Azure, so applying with the default
+  prefix will fail with "name already taken". Set your own.
+
+State is local. That means `terraform.tfstate` holds the Cosmos connection
+string and the OpenAI key in plaintext on one machine — fine for a solo demo,
+wrong for anything shared. A remote backend block is stubbed in `main.tf`.
 
 ---
 
@@ -106,8 +130,8 @@ All resources are in `terraform/main.tf`. Run `terraform apply` to provision fro
 | # | Project | Status |
 |---|---------|--------|
 | 1 | Serverless LLM Pipeline | ✅ Complete |
-| 2 | AI Chatbot on Azure | 🔄 In progress |
+| 2 | AI Chatbot on Azure | ✅ Deployed — [live demo](https://woedem24.github.io/azure-ai-chatbot/) |
 | 3 | Kubernetes AI Inference (AKS) | 📋 Planned |
 | 4 | Multi-Region Architecture | 📋 Planned |
 
-**Woedem Malorku** — AZ-104 · AWS SOA-C03 · AZ AI-900
+**Woedem Malorku** — AZ-104 · AWS CloudOps Engineer Associate (SOA-C03) · AI-900

@@ -1,1 +1,13 @@
-.venv
+.git*
+.vscode/
+.venv/
+venv/
+__pycache__/
+obj/
+bin/
+get-pip.py
+local.settings.json
+terraform/
+tests/
+*.md
+.DS_Store

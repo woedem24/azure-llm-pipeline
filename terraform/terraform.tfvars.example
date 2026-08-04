@@ -1,0 +1,18 @@
+# terraform.tfvars.example
+# ─────────────────────────────────────────────────────────
+# Copy to terraform.tfvars and fill in. NEVER commit terraform.tfvars.
+# ─────────────────────────────────────────────────────────
+
+subscription_id = "YOUR_AZURE_SUBSCRIPTION_ID"   # required by the azurerm v4 provider
+
+# Storage account, Key Vault and Cosmos DB names are GLOBALLY unique across
+# Azure. Change this from the default or `terraform apply` will fail with
+# "name already taken".
+prefix   = "llmpipeline"
+location = "eastus2"
+
+# From: Azure Portal -> Azure OpenAI -> Keys and Endpoints.
+# This config does not provision the OpenAI resource itself; it stores these
+# in Key Vault so the function can read them at runtime.
+openai_endpoint = "https://YOUR_OPENAI_RESOURCE.openai.azure.com/"
+openai_api_key  = "YOUR_OPENAI_API_KEY_HERE"
